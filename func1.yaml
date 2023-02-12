@@ -1,0 +1,245 @@
+data:
+  AzureWebJobsStorage: VXNlRGV2ZWxvcG1lbnRTdG9yYWdlPXRydWU=
+  FUNCTIONS_WORKER_RUNTIME: ZG90bmV0
+apiVersion: v1
+kind: Secret
+metadata:
+  name: func1
+---
+data:
+  host.master: QlpHMW5RbDhnR1N0VnZkUWM5YW9vTU1VV2JUaDlQa3pjN19Ia1kxTkZmb2dBekZ1aDFQbDB3PT0=
+  host.function.default: NEI3Wnc4SEQ5V3ozVGFHOFFWZzhVdzc4RlpKUXF3azFaRTRCVWVwUWxjOFlBekZ1WWdfZHFRPT0=
+  host.systemKey.default: Sk1MY1pNcTVqZjVTVEh2Mm51RFU1ZWxkVERjZ0RPX0Z6WmR2dEZIM1ktWFpBekZ1WkhBcDhBPT0=
+  functions.httpexample.default: ZkczNG1BOWl4Y1Nla0N0bTdCWS04ZVNiQjJodnZPQWotZFhnNXVGcEU5bVhBekZ1Y2JySmVRPT0=
+apiVersion: v1
+kind: Secret
+metadata:
+  name: func-keys-kube-secret-func1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: func1-function-keys-identity-svc-act
+---
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - secrets
+  - configMaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: functions-keys-manager-role
+---
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: functions-keys-manager-role
+subjects:
+- kind: ServiceAccount
+  name: func1-function-keys-identity-svc-act
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: func1-function-keys-identity-svc-act-functions-keys-manager-rolebinding
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: func1-http
+spec:
+  selector:
+    app: func1-http
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: func1-http
+  labels:
+    app: func1-http
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: func1-http
+  template:
+    metadata:
+      labels:
+        app: func1-http
+    spec:
+      containers:
+      - name: func1-http
+        image: func1
+        ports:
+        - containerPort: 80
+        env:
+        - name: AzureFunctionsJobHost__functions__0
+          value: HttpExample
+        - name: AzureWebJobsSecretStorageType
+          value: kubernetes
+        - name: AzureWebJobsKubernetesSecretName
+          value: secrets/func-keys-kube-secret-func1
+        envFrom:
+        - secretRef:
+            name: func1
+        readinessProbe:
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 240
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+        startupProbe:
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 240
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+      serviceAccountName: func1-function-keys-identity-svc-act
+---
+
+data:
+  AzureWebJobsStorage: VXNlRGV2ZWxvcG1lbnRTdG9yYWdlPXRydWU=
+  FUNCTIONS_WORKER_RUNTIME: ZG90bmV0
+apiVersion: v1
+kind: Secret
+metadata:
+  name: func1
+  namespace: az-func
+---
+data:
+  host.master: c3hRVUVQY1ZsN1V5d0pNWDU0UFBFNXFjM1pLOW1pLWRwcGhPdVJ2TlB5WFNBekZ1M05XX2tnPT0=
+  host.function.default: VFVJSzlTakxwMHRLdWdoTHFjNmd0YTQ2Z19nQ2pDM1dON25FSVpNQ0EyaV9BekZ1ZnJhUUhRPT0=
+  host.systemKey.default: YXMwTHZVdVJfZHBlc0trLTJpSnV4UFVJUWxVSFAxR09qRi1KcEwwaDZxd0VBekZ1TEJ2bG1BPT0=
+  functions.httpexample.default: N08td1JFLVNOOEwxSkhlYVRoVHNiQlJXeXVzSkhUUXYySUpmVzl5dHRNMnRBekZ1X3Frc1R3PT0=
+apiVersion: v1
+kind: Secret
+metadata:
+  name: func-keys-kube-secret-func1
+  namespace: az-func
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: func1-function-keys-identity-svc-act
+  namespace: az-func
+---
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - secrets
+  - configMaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: functions-keys-manager-role
+  namespace: az-func
+---
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: functions-keys-manager-role
+subjects:
+- kind: ServiceAccount
+  name: func1-function-keys-identity-svc-act
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: func1-function-keys-identity-svc-act-functions-keys-manager-rolebinding
+  namespace: az-func
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: func1-http
+  namespace: az-func
+spec:
+  selector:
+    app: func1-http
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: func1-http
+  namespace: az-func
+  labels:
+    app: func1-http
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: func1-http
+  template:
+    metadata:
+      labels:
+        app: func1-http
+    spec:
+      containers:
+      - name: func1-http
+        image: func1
+        ports:
+        - containerPort: 80
+        env:
+        - name: AzureFunctionsJobHost__functions__0
+          value: HttpExample
+        - name: AzureWebJobsSecretStorageType
+          value: kubernetes
+        - name: AzureWebJobsKubernetesSecretName
+          value: secrets/func-keys-kube-secret-func1
+        envFrom:
+        - secretRef:
+            name: func1
+        readinessProbe:
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 240
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+        startupProbe:
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 240
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+      serviceAccountName: func1-function-keys-identity-svc-act
+---
+
