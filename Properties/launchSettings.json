@@ -1,8 +1,8 @@
 {
   "profiles": {
-    "AzFuncK8s": {
+    "azure_functions_in_aks": {
       "commandName": "Project",
-      "commandLineArgs": "--port 7156",
+      "commandLineArgs": "--port 7069",
       "launchBrowser": false
     }
   }
